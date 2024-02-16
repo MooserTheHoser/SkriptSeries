@@ -92,7 +92,7 @@ command /setrnum <text> <player>:
         set {rnum::%arg 2's uuid%} to rounded {rnum::%arg 2's uuid%}
         broadcast {rnum::%arg 2's uuid%}
 
-command /guess <text>:
+command /guess <text>: #Another shot at guessing if we want to see how close we were!
     description: Guess the lucky number
     usage: /guess <number>
     trigger:
