@@ -1,0 +1,108 @@
+
+#==============================================================#
+#========================= FUNCTIONS ==========================#
+#==============================================================#
+
+function checklocation(l: location):: boolean: #checks if two locations are less than one block away
+    set {_loc1} to location(-15, 85, -12, "spawn_world") #setting first location
+    if distance between {_l} and {_loc1} is less than 1: #change 1 to change distance between locations
+        return true
+    else:
+        return false
+
+function randomprize(p: player): #picks a random prize
+    set {_n} to a random number between 1 and 200
+    if {_n} is between 0 and 20:
+        picksherdprize({_p}) #I've added a bunch of functions that I use in my other projects. Feel free to make these functions or put a prize/message in here
+    else if {_n} is between 20 and 40:
+        keygamble({_p}) #and here
+    else if {_n} is between 40 and 60:
+        dustgamble({_p}) #and here, etc...
+    else if {_n} is between 60 and 80:
+        claimmystery({_p})
+    else if {_n} is between 80 and 100:
+        dustmystery({_p})
+    else if {_n} is between 100 and 120:
+        randomkeyvoucher({_p})
+    else if {_n} is between 120 and 140:
+        spawnerfrenzy({_p})
+    else if {_n} is between 140 and 160:
+        rankmystery({_p})
+    else if {_n} is between 160 and 180:
+        picktemplate({_p})
+    else:
+        send "&eYou think to yourself... ''Only one dolla?? This could've been better!''" to {_p}
+        givetoken({_p})
+
+function setrandomnumber(p: player): #function that sets the random number
+    set {rnum::%{_p}'s uuid%} to a random number between 0 and 50
+    set {rnum::%{_p}'s uuid%} to rounded {rnum::%{_p}'s uuid%}
+
+#==============================================================#
+#=========================== EVENTS ===========================#
+#==============================================================#
+
+on join:
+    if {rnum::%player's uuid%} is not set:
+        setrandomnumber(player) #sets the number if we need to for new joiners (might need to wait for the next day if you join throughout the day)
+
+at 6:05am in "world": #Will always generate a new random number for every online player at this time.
+    loop all players:
+        clear {guessed::%loop-player's uuid%} #Firstly, we need to clear our online players from the list of people who guessed
+    broadcast "&dA new day has dawned... Today could always be your lucky day!" #a fun little message
+    loop all players:
+        setrandomnumber(loop-player) #give everyone a new random number
+    #set {mth} to "MooserTheHoser" parsed as player #DEBUGGING
+    #broadcast {rnum::%{mth}'s uuid%} #DEBUGGING
+
+on drop:
+    wait 1 second #wait for paper to drop in location
+    if type of event-item is a piece of paper: #check if paper
+        if {guessed::%player's uuid%} is true: #stop if we have already made a guess for the day
+            stop
+        loop dropped items in radius 3 of player: #will check for paper entity that we dropped
+            if checklocation(location of loop-entity) is false: #close if we haven't dropped in the correct location
+                exit
+            if name of item of loop-entity parsed as number is not between 0 and 50: #checks the name of what the item was, for the entity. If not between 0 and 50, we don't like!
+                send "&eTry renaming this to a number between 0 and 50..."
+                exit
+            if name of item of loop-entity is "%{rnum::%player's uuid%}%": #check if the item was named our random number
+                send "&awinner winner chicken dinner" to player
+                randomprize(player)
+                set {guessed::%player's uuid%} to true #mark us as someone who has guessed
+            else:
+                send "&cSorry, wrong guess! Try using /guess <##> to find the lucky number." to player
+                set {guessed::%player's uuid%} to true #mark us as someone who has guessed
+
+#==============================================================#
+#========================== COMMANDS ==========================#
+#==============================================================#
+
+command /rprize:
+    permission: skript.rprize
+    trigger:
+        randomprize(player)
+
+command /setrnum <text> <player>:
+    permission: skript.setrnum
+    description: sets rnum for player
+    usage: /setrnum <number>
+    trigger:
+        set {rnum::%arg 2's uuid%} to arg 1 parsed as number
+        set {rnum::%arg 2's uuid%} to rounded {rnum::%arg 2's uuid%}
+        broadcast {rnum::%arg 2's uuid%}
+
+command /guess <text>: #Another shot at guessing if we want to see how close we were!
+    description: Guess the lucky number
+    usage: /guess <number>
+    trigger:
+        if arg 1 parsed as integer is not between 0 and 50:
+            send "&cNumber is only between 0 and 50..."
+            stop
+        if {guessed::%player's uuid%} is not set:
+            send "&cSubmit a paper in the well first!"
+            stop
+        if arg 1 contains "%{rnum}%":
+            send "&aYou guessed it!" to player
+        else:
+            send "&cTry again!" to player
