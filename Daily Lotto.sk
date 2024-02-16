@@ -92,7 +92,7 @@ command /setrnum <text> <player>:
         set {rnum::%arg 2's uuid%} to rounded {rnum::%arg 2's uuid%}
         broadcast {rnum::%arg 2's uuid%}
 
-command /guess <text>: #Another shot at guessing if we want to see how close we were!
+command /guess <text>:
     description: Guess the lucky number
     usage: /guess <number>
     trigger:
@@ -102,7 +102,11 @@ command /guess <text>: #Another shot at guessing if we want to see how close we 
         if {guessed::%player's uuid%} is not set:
             send "&cSubmit a paper in the well first!"
             stop
-        if arg 1 contains "%{rnum}%":
+        if arg 1 parsed as number is less than {rnum::%player's uuid%}:
+            set {_highlow} to "↑"
+        else:
+            set {_highlow} to "↓"
+        if arg 1 is "%{rnum::%player's uuid%}%":
             send "&aYou guessed it!" to player
         else:
-            send "&cTry again!" to player
+            send "&cTry again! %{_highlow}%" to player
