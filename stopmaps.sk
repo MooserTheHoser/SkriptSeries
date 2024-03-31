@@ -1,0 +1,8 @@
+on inventory click: #checks when inventory is clicked
+    if type of clicked inventory is not cartography table inventory:
+        stop #stops if not cartography table
+    if index of clicked slot is not 2:
+        stop #stops unless we are using the table to make something
+    if slot 1 of clicked inventory is an empty map:
+        cancel event #cancels if trying to dupe an existing map
+        send "&cMap duping is disabled." to player #message player
